@@ -1,0 +1,130 @@
+1.Struts2要点
+#Struts2的体系结构和工作流程
+-StrutsPrepareAndExecuteFilter
+-Action
+-Result
+-Interceptor拦截器(用Filter替代)
+-ValueStack(ActionContext/ServletActionContext)
+
+
+ognl.jar-->将反射封装了
+方便获取对象信息
+方便设置对象信息
+方便对象方法
+struts2-->webwork-->ognl.jar
+利用ognl.jar工具访问ValueStack对象
+
+Object Graphics Navigation Language
+"name":会访问root存储区中的对象的name属性
+"#session":会访问context存储区中的key=session值
+
+
+请求-->Filter-->StrutsFilter控制器
+-->拦截点1
+-->Action-->Service/Dao
+-->Result(JSP)
+-->拦截点2
+-->Filter
+-->响应输出
+
+2.Hibernate要点
+#Hibernate体系结构（了解）
+ORM工具：object relation Mapping
+实体关系映射.(Java实体对象和关系数据库映射)
+ORM目的:将数据库映射成实体对象,程序员
+通过对象操作实现对表的操作。
+SQL structor query Language
+-框架的jar包
+-框架的主配置文件hibernate.cfg.xml
+-实体类
+-映射描述信息(XML文件或注解)
+-使用Session API操作
+#Hibernate基本使用(单表处理)
+##主键管理
+hibernate可以生成主键值,不需要在代码中
+给实体对象设置id值。
+-sequence
+  指定序列生成主键,适合Oracle
+-identity
+ 使用数据库自动递增,适合MySQL和SQLServer
+-native
+ 根据方言自动选择identity,sequence
+-uuid
+ 采用uuid算法生成
+-assigned
+忽略,hibernate不管,需要开发者在代码给
+实体对象setId值
+#Hibernate复杂应用(单表处理)
+-HQL语言（面向对象查询语言）
+ 语法结构与SQL相似,不同点：
+ HQL使用类型名和属性名;SQL使用表名和字段名
+ HQL大小写敏感(除关键字外)
+ HQL不支持select *（省略不写即可）
+ HQL不支持join中的on子句
+ HQL不支持数据库特有的函数和关键字
+-SQL语言
+-Cretria条件查询
+#Hibernate框架特性（了解）
+-延迟加载
+org.hibernate.LazyInitializationException: 
+could not initialize proxy - no Session
+
+-缓存（一级、二级、查询缓存）
+一级缓存:每个Session对象都有一个缓存区,
+      用于存储Session管理的实体对象.
+      (save,update,load,get)
+      缓存生命期与Session对象同步,
+      使用期间独享，
+      清理缓存方法:evict(obj);clear();close();
+        flush();/tx.commit();
+二级缓存：每个SessionFactory有一个缓存区
+        被称为二级缓存.可以被Factory创建
+        的Session共享。
+        缓存生命期与SessionFactory对象同步,
+       清理方法:evict(类型);evict(类型,id)
+查询缓存：一级和二级只能缓存单个对象；
+        如果需要缓存一个结果集,只能使用
+       查询缓存。（属于特殊二级缓存）
+
+一级默认开启;二级和查询需要手工启用。
+
+
+#Hibernate关联映射及操作（了解）
+单个对象关联<many-to-one>
+Book-->User
+集合对象关联<one-to-many>
+User-->Books
+
+请求-->Action-->UserDao
+-->Result-->JSP(利用标签访问User,触发查询)
+--》插入关闭Session逻辑
+-->输出响应界面信息
+
+需要采用OpenSessionInView模式保证JSP
+顺利加载数据。
+可以通过Filter或拦截器回收Session。
+如果使用Spring，框架提供了一个
+OpenSessionInViewFilter组件
+只需要配置就可以支持Hibernate延迟加载操作
+
+public class UserDao{
+  public User findById(String id){
+       User user = (User)
+          session.load(User.class,id);
+       return user;
+  }
+}
+
+##发生延迟加载的地方
+-load/get查询（建议load）
+-query.iterator/list查询(数据多建议iterator,少list)
+-关联映射（关联属性默认延迟加载）
+
+1000-->load-->没有
+1000-->get-->并发出现1000SQL
+
+
+
+
+
+
